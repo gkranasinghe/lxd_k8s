@@ -1,0 +1,12 @@
+- hosts:
+    - kmaster
+  become_method: sudo
+  become_user: root
+  gather_facts: yes
+  connection: ssh
+  tasks:
+   
+    - name: Recreate kube-proxy to apply patch 
+      become: yes
+      become_user: kube
+      shell: kubectl get pods  -n kube-system --no-headers=true | awk '/kube-proxy/{print $1}' | xargs  kubectl delete -n kube-system pod
