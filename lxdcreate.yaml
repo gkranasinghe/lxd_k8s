@@ -38,7 +38,7 @@
           mode: pull
           server: https://images.linuxcontainers.org
           protocol: simplestreams
-          alias: ubuntu/xenial/amd64
+          alias: ubuntu/focal/amd64
         profiles: ["k8s"]
         wait_for_ipv4_addresses: true
         # timeout: 600

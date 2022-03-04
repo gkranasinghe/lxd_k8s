@@ -1,12 +1,20 @@
-- hosts:
-    - kmaster
+- hosts: master_nodes:worker_nodes
   become_method: sudo
   become_user: root
   gather_facts: yes
   connection: ssh
   tasks:
+    - name: create the kube user account
+      user: name=kube append=yes state=present createhome=yes shell=/bin/bash
+
+    - name: allow 'kube' to use sudo without needing a password
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'kube ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: set up authorized keys for the kube user
+      authorized_key: user=kube key="{{item}}"
+      with_file:
+        - /home/gk/.ssh/id_rsa.pub
    
-    - name: Recreate kube-proxy to apply patch 
-      become: yes
-      become_user: kube
-      shell: kubectl get pods  -n kube-system --no-headers=true | awk '/kube-proxy/{print $1}' | xargs  kubectl delete -n kube-system pod
