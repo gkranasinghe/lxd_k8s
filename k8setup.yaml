@@ -28,7 +28,7 @@
 
      - name: install containerd
        shell: |
-               sudo apt update -qq && sudo apt install -qq -y containerd apt-transport-https 
+               sudo apt update -qq && sudo apt install -qq -y containerd apt-transport-https curl 
                sudo mkdir -p /etc/containerd
                sudo containerd config default | sudo tee /etc/containerd/config.toml
                sudo systemctl restart containerd
@@ -42,9 +42,14 @@
      - name: install and configure dependencies
        become_method: sudo
        become_user: root
-       shell: |
-               sudo apt install -y gnupg
-               curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+       shell: sudo apt install -y gnupg
+                
+               
+     - name: install and configure dependencies
+       become_method: sudo
+       become_user: root
+       shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+
 
      - name: Create kubernetes repo file
        file:
