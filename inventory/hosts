@@ -6,7 +6,8 @@ kmaster    ip_address=10.82.54.122
 kworker1   ip_address=10.82.54.111
 kworker2   ip_address=10.82.54.112
 ; kworker3   ip_address=10.82.54.113
-
+[nfs_nodes]
+nfsserver    ip_address=10.82.54.130
 
 [all:vars]
 ansible_connection=lxd

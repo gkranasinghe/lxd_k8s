@@ -1,0 +1,166 @@
+---
+- hosts: localhost
+  connection: local
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: stop containers
+    # get all host names from inventory
+      loop: "{{ groups['nfs_nodes'] }}"
+    # use lxd_container module from ansible to create containers
+      lxd_container:
+      # container name is the hostname
+        name: "{{ item }}"
+        state: stopped
+    - name: delete containers
+      # get all host names from inventory
+      loop: "{{ groups['nfs_nodes'] }}"
+      # use lxd_container module from ansible to create containers
+      lxd_container:
+        # container name is the hostname
+        name: "{{ item }}"
+        state: absent
+
+
+
+- hosts: localhost
+  connection: local
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Create a started container
+      with_items: "{{ groups['nfs_nodes'] }}"
+      lxd_container:
+        name: "{{ item }}"
+        state: started
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          protocol: simplestreams
+          alias: ubuntu/focal/amd64
+        profiles: ["k8s"]
+        wait_for_ipv4_addresses: true
+        # timeout: 600
+        config:
+        devices:
+          # configure network interface
+          eth0:
+            type: nic
+            nictype: bridged
+            parent: lxdbr0
+            # get ip address from inventory
+            ipv4.address: "{{ hostvars[item].ip_address }}"
+
+
+
+# - hosts:
+#   - localhost
+#   become: yes
+#   tasks:
+#     - name: create the kube user account
+#       user: name=kube append=yes state=present createhome=yes shell=/bin/bash
+
+#     - name: allow 'kube' to use sudo without needing a password
+#       lineinfile:
+#         dest: /etc/sudoers
+#         line: 'kube ALL=(ALL) NOPASSWD: ALL'
+#         validate: 'visudo -cf %s'
+
+#     - name: create .kube directory
+#       become: yes
+#       become_user: kube
+#       file:
+#         path: $HOME/.kube
+#         state: directory
+#         mode: 0755
+
+- hosts:
+  - kmaster
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: copies admin.conf to local user's kube config
+      ansible.builtin.fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: ~/.kube/config
+        flat: yes
+
+
+
+- hosts:
+  - nfsserver
+  become: yes
+  become_method: sudo
+  become_user: root
+  gather_facts: yes
+  connection: ssh
+
+  tasks:
+
+     - name: install nfs-server
+       shell: |
+               sudo apt-get update && sudo apt-get install -y nfs-server
+               sudo mkdir -p /nfs-storage
+
+
+     - name: Add NFS access rights for k8 cluster nodes 
+       lineinfile:
+         path: "/etc/exports"
+         line: |
+               /nfs-storage *(rw,no_subtree_check,no_root_squash)
+
+     - name: enable nfs-server
+       shell: |
+               sudo systemctl enable --now nfs-server
+               sudo exportfs -ar
+
+- hosts: master_nodes:worker_nodes
+  # remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  gather_facts: yes
+  connection: ssh
+
+  tasks:
+    - name: prepare nodes to connect to nfs server
+      shell: sudo   apt install -y nfs-common
+
+
+- hosts: localhost
+  vars:
+     helm_chart_url: "https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner"
+  tasks:
+   - name: Add helm repo nfs-subdir-external-provisioner
+     kubernetes.core.helm_repository:
+      name: nfs-subdir-external-provisioner
+      repo_url: "{{ helm_chart_url }}"
+
+
+  
+
+
+- hosts: localhost
+  become: yes
+  become_method: sudo
+  become_user: gk
+  tasks:
+     - name: Create a k8s namespace
+       kubernetes.core.k8s:
+          name: nfs-provisioner
+          api_version: v1
+          kind: Namespace
+          state: present
+
+     - name: Install nfs-subdir-external-provisioner
+       kubernetes.core.helm:
+         name: nfs-subdir-external-provisioner
+         namespace: nfs-provisioner
+         chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+         values:
+          nfs:
+            server: "{{ hostvars['nfsserver'].ip_address }}"
+            path: /nfs-storage
+

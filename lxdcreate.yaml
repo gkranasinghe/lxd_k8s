@@ -21,8 +21,6 @@
         name: "{{ item }}"
         state: absent
 
-
-
 - hosts: localhost
   connection: local
   become: yes
