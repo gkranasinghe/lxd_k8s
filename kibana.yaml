@@ -1,0 +1,38 @@
+- hosts: localhost
+  become: yes
+  # become_method: sudo
+  become_user: gk
+  vars:
+    helm_chart_url: 'https://helm.elastic.co'
+  tasks:
+    - name: Add helm repo elastic
+      kubernetes.core.helm_repository:
+        name: elastic
+        repo_url: '{{ helm_chart_url }}'
+
+- hosts: localhost
+  become: yes
+  # become_method: sudo
+  become_user: gk
+  tasks:
+    - name: Create a k8s namespace  logging
+      kubernetes.core.k8s:
+        name: logging
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Install kibana
+      kubernetes.core.helm:
+        name: kibana
+        #  state: absent
+        namespace: logging
+        chart_ref: elastic/kibana
+        values:
+          resources:
+            requests:
+              cpu: '1000m'
+              memory: '1000Mi'
+            limits:
+              cpu: '1000m'
+              memory: '1000Mi'
