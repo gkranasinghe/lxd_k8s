@@ -154,15 +154,7 @@
             server: "{{ hostvars['nfsserver'].ip_address }}"
             path: /nfs-storage
 
-     - name: patch storageclass nfs-client as default storage class 
-       kubernetes.core.k8s:
-          state: patched
-          kind: storageclass
-          name: patch_storageclass
-          definition:
-            metadata:
-              annotations:
-                storageclass.kubernetes.io/is-default-class: true
+
 
 
 # TODO kubectl patch storageclass nfs-client -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
