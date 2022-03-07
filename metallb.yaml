@@ -1,0 +1,39 @@
+
+
+- hosts: localhost
+  become: yes
+  # become_method: sudo
+  become_user: gk
+  vars:
+     helm_chart_url: "https://metallb.github.io/metallb"
+  tasks:
+   - name: Add helm repo metallb
+     kubernetes.core.helm_repository:
+      name: metallb
+      repo_url: "{{ helm_chart_url }}"
+
+
+- hosts: localhost
+  become: yes
+  # become_method: sudo
+  become_user: gk
+  tasks:
+     - name: Create a k8s namespace  metallb-system
+       kubernetes.core.k8s:
+          name: metallb-system
+          api_version: v1
+          kind: Namespace
+          state: present
+
+     - name: Install metallb 
+       kubernetes.core.helm:
+         name: metallb
+         namespace: metallb-system
+         chart_ref: metallb/metallb
+         values:
+           configInline:
+            address-pools:
+            - name: default
+              protocol: layer2
+              addresses:
+              - 10.82.54.240-10.82.54.250

@@ -1,0 +1,63 @@
+- hosts: localhost
+  become: yes
+  # become_method: sudo
+  become_user: gk
+  tasks:
+      - name: Create a k8s namespace  argocd
+        kubernetes.core.k8s:
+          name: argocd
+          api_version: v1
+          kind: Namespace
+          state: present
+# # Download and apply manifest
+#       - name: Download metrics-server manifest to the cluster.
+#         ansible.builtin.get_url:
+#           url: https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+#           dest: ~/metrics-server.yaml
+#           mode: '0664'
+
+#       - name: Apply metrics-server manifest to the cluster.
+#         kubernetes.core.k8s:
+#           state: present
+#           src: ~/metrics-server.yaml
+
+    #  Download and apply manifest
+      - name: Download argo-cd manifest to the cluster.
+        ansible.builtin.get_url:
+          url: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+          dest: ~/argo-cd.yaml
+          mode: '0664'
+
+      - name: Apply argocd manifest to the cluster.
+        kubernetes.core.k8s:
+          state: present
+          src: ~/argo-cd.yaml
+          namespace: argocd
+
+# - name: install my argo objects
+#   hosts: localhost
+#   gather_facts: false
+#   become: yes
+#   # become_method: sudo
+#   become_user: gk
+
+#   vars:
+#     obj_def_path: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/
+#     obj_def_list:
+#       - install.yaml
+#       # - bar-pv.yaml
+#       # - foo.yaml
+#       # - bar.yaml
+#       # - this-service.yaml
+#       # - that-nodeport.yaml
+#       # - something.yaml
+
+
+#   tasks:
+#     - name: Install all objects from def files
+#       k8s:
+#         src: "{{ obj_def_path }}/{{ item }}"
+#         state: present
+#         apply: true
+#       loop: "{{ obj_def_list }}"
+

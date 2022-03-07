@@ -75,19 +75,6 @@
 #         state: directory
 #         mode: 0755
 
-- hosts:
-  - kmaster
-  become: yes
-  become_user: root
-  become_method: sudo
-  tasks:
-    - name: copies admin.conf to local user's kube config
-      ansible.builtin.fetch:
-        src: /etc/kubernetes/admin.conf
-        dest: ~/.kube/config
-        flat: yes
-
-
 
 - hosts:
   - nfsserver
@@ -130,6 +117,9 @@
 
 
 - hosts: localhost
+  become: yes
+  become_method: sudo
+  become_user: gk
   vars:
      helm_chart_url: "https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner"
   tasks:

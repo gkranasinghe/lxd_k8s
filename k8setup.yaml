@@ -39,7 +39,7 @@
                sudo swapoff -a
                sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
-     - name: install and configure dependencies
+     - name: install and configure dependencies gnupg
        become_method: sudo
        become_user: root
        shell: sudo apt install -y gnupg
@@ -84,9 +84,11 @@
                sudo chmod +x /etc/rc.local
          
      - name: patch to shared mount propagation to run calico node 
-       shell: |
-               sudo mount --make-rshared /
+       shell: sudo mount --make-rshared /
 
+     - name: patch to create symlink for /dev/kmsg for kubelet proper functionality
+       shell: |
+               echo 'L /dev/kmsg - - - - /dev/console' > /etc/tmpfiles.d/kmsg.conf
 - hosts:
     - kmaster
   become_method: sudo
@@ -110,6 +112,7 @@
         mode: 0755
 
     - name: copies admin.conf to user's kube config
+      become: yes
       copy:
         src: /etc/kubernetes/admin.conf
         dest: /home/kube/.kube/config
@@ -179,3 +182,16 @@
      become: yes
      command: sh /tmp/kubernetes_join_command
      register: joined_or_not
+
+- hosts:
+  - kmaster
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: copies admin.conf to local user's kube config
+      ansible.builtin.fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/gk/.kube/config
+        remote_src: yes
+        owner: gk
+        flat: yes
