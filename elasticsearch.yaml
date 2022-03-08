@@ -32,7 +32,7 @@
          namespace: logging
          chart_ref: elastic/elasticsearch
          values:
-            replicas: 1
+            replicas: 2
             resources:
               requests:
                 cpu: "1000m"

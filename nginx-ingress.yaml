@@ -1,25 +1,39 @@
+
+
+- hosts: localhost
+  become: yes
+  # become_method: sudo
+  become_user: gk
+  vars:
+     helm_chart_url: "https://kubernetes.github.io/ingress-nginx"
+  tasks:
+   - name: Add helm repo ingress-nginx
+     kubernetes.core.helm_repository:
+      name: ingress-nginx
+      repo_url: "{{ helm_chart_url }}"
+
+
 - hosts: localhost
   become: yes
   # become_method: sudo
   become_user: gk
   tasks:
-      - name: Create a k8s namespace  ingress-nginx
-        kubernetes.core.k8s:
+     - name: Create a k8s namespace  ingress-nginx
+       kubernetes.core.k8s:
           name: ingress-nginx
           api_version: v1
           kind: Namespace
           state: present
 
-      - name: Download ingress-nginx manifest to the cluster.
-        ansible.builtin.get_url:
-          url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/cloud/deploy.yaml
-          dest: ~/ingress-nginx.yaml
-          mode: '0664'
+     - name: Install nginx-ingress
+       kubernetes.core.helm:
+         name: ingress-nginx
+         namespace: ingress-nginx
+         chart_ref: ingress-nginx/ingress-nginx
+         values:
+          ## IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
+            ingressClassResource:
+              default: true
 
-      - name: Apply ingress-nginx manifest to the cluster.
-        kubernetes.core.k8s:
-          state: present
-          src: ~/ingress-nginx.yaml
-          namespace: ingress-nginx
 
 
