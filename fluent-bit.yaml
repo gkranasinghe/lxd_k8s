@@ -32,12 +32,6 @@ data:
         Mem_Buf_Limit 5MB
         Skip_Long_Lines On
     [INPUT]
-        Name tail
-        Path /var/log/containers/ingress-nginx*.log
-        Tag nginx.*
-        Mem_Buf_Limit 5MB
-        Skip_Long_Lines On
-    [INPUT]
         Name systemd
         Tag host.*
         Systemd_Filter _SYSTEMD_UNIT=kubelet.service
@@ -50,25 +44,26 @@ data:
         Keep_Log Off
         K8S-Logging.Parser On
         K8S-Logging.Exclude On
-    [FILTER]
-        Name kubernetes
-        Match nginx.*
-        Merge_Log On
-        Keep_Log Off
-        K8S-Logging.Parser On
-        K8S-Logging.Exclude On
-    [OUTPUT]
-        Name es
-        Match nginx.*
-        Host elasticsearch-master
-        Logstash_Format On
-        Retry_Limit False
+    # [FILTER]
+    #     Name kubernetes
+    #     Match nginx.*
+    #     Merge_Log On
+    #     # Merge_Log_Key On
+    #     Keep_Log Off
+    #     K8S-Logging.Parser On
+    #     K8S-Logging.Exclude On
+    # [OUTPUT]
+    #     Name es
+    #     Match nginx.*
+    #     Host elasticsearch-master
+    #     Logstash_Format On
+    #     Retry_Limit False
+    #     Logstash_Prefix nginx
     [OUTPUT]
         Name es
         Match kube.*
         Host elasticsearch-master
         Logstash_Format On
-        Logstash_Prefix nginx
         Retry_Limit False
     [OUTPUT]
         Name es
@@ -77,9 +72,7 @@ data:
         Logstash_Format On
         Logstash_Prefix node
         Retry_Limit False
-    [OUTPUT]
-        Name stdout
-        Match nginx.*
+
 kind: ConfigMap
 metadata:
   annotations:
