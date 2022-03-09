@@ -19,3 +19,6 @@
      - name: patch to create symlink for /dev/kmsg for kubelet proper functionality
        shell: |
                echo 'L /dev/kmsg - - - - /dev/console' > /etc/tmpfiles.d/kmsg.conf
+               
+     - name: prepare nodes to connect to nfs server
+       shell: sudo   apt install -y nfs-common

@@ -16,7 +16,7 @@
           server: https://images.linuxcontainers.org
           protocol: simplestreams
           alias: ubuntu/focal/amd64
-        profiles: ["k8s"]
+        profiles: ["k8s-high"]
         wait_for_ipv4_addresses: true
         # timeout: 600
         config:
@@ -162,5 +162,5 @@
      command: sh /tmp/kubernetes_join_command
      register: joined_or_not
 
-
-
+   - name: prepare nodes to connect to nfs server
+     shell: sudo   apt install -y nfs-common

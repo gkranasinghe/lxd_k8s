@@ -30,6 +30,7 @@
          name: fluent-bit
          namespace: logging
          chart_ref: fluent/fluent-bit
+        #  state: absent
         #  values:
         #    configInline:
         #     address-pools:

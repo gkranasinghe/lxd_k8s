@@ -33,13 +33,15 @@
          chart_ref: elastic/elasticsearch
          values:
             replicas: 2
+            minimumMasterNodes: 1
+            clusterHealthCheckParams: 'wait_for_status=yellow&timeout=1s'
             resources:
               requests:
                 cpu: "1000m"
-                memory: "1Gi"
+                memory: "2Gi"
               limits:
                 cpu: "1000m"
-                memory: "1Gi"
+                memory: "2Gi"
             volumeClaimTemplate:
               accessModes: ["ReadWriteOnce"]
               resources:
