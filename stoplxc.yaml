@@ -1,0 +1,11 @@
+- hosts: localhost
+  connection: local
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Create a started container
+      with_items: "{{ groups['all'] }}"
+      lxd_container:
+        name: "{{ item }}"
+        state: stopped
+        force_stop: true
